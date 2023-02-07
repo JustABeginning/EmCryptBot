@@ -1,0 +1,5 @@
+pycryptodome
+argparse
+python-telegram-bot
+regex
+asyncio
