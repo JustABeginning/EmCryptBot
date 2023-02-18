@@ -1,2 +1,2 @@
-# EmojiCrypt
+# EmCryptBot
 Emoji based Telegram Bot
