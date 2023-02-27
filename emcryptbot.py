@@ -66,6 +66,7 @@ CHAT_LOG = None
 BOTNAME = 'bot'
 USERNAME = 'user'
 CHOICE = 0
+PREV_CHOICE = CHOICE
 KEYWORD = 'pass'
 
 # Define a few command handlers. These usually take the two arguments update and
@@ -117,6 +118,8 @@ async def decrypt(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def keyword(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global CHOICE
+    global PREV_CHOICE
+    PREV_CHOICE = CHOICE
     CHOICE = 3
     await update.message.reply_html(
         rf"Enter KEYWORD",  # type: ignore
@@ -252,6 +255,7 @@ def append_answer_to_chat_log(question, answer, chat_log=None):
 
 def ask(question):
     global KEYWORD
+    global CHOICE
     cipher = emojicrypt.EmojiCrypt(KEYWORD)
     if CHOICE == 1:
         answer = cipher.encrypt(question)
@@ -259,6 +263,7 @@ def ask(question):
         answer = cipher.decrypt(question)
     elif CHOICE == 3:
         KEYWORD = question
+        CHOICE = PREV_CHOICE
         answer = "KEYWORD set to:=> " + KEYWORD
     else:
         answer = 'No Response . . .'
@@ -303,7 +308,7 @@ async def interact(update, new):
     except Exception as e:
         errstr = str(e)
         print('\nException ::\n' + errstr)
-        await update.message.reply_text('Please WAIT for a few seconds . . .')
+        await update.message.reply_text('Please WAIT !')
 
 
 def interact_call(update, new):
