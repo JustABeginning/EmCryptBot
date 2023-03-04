@@ -1,10 +1,6 @@
-"""OpenAI Response based Telegram Bot"""
+"""EmojiCrypt based Telegram Bot"""
 
 #!/usr/bin/env python
-
-# Import Custom
-
-import emojicrypt
 
 # Import Modules
 
@@ -25,12 +21,17 @@ try:
 except ImportError:
     __version_info__ = (0, 0, 0, 0, 0)  # type: ignore[assignment]
 
+# Import Custom
+
+import emojicrypt
+
 if __version_info__ < (20, 0, 0, "alpha", 1):
     raise RuntimeError(
         f"This example is not compatible with your current PTB version {TG_VER}. To view the "
         f"{TG_VER} version of this example, "
         f"visit https://docs.python-telegram-bot.org/en/v{TG_VER}/examples.html"
     )
+
 
 # Enable logging
 logging.basicConfig(
@@ -66,7 +67,7 @@ CHAT_LOG = None
 BOTNAME = 'bot'
 USERNAME = 'user'
 CHOICE = 0
-PREV_CHOICE = CHOICE
+# PREV_CHOICE = CHOICE
 KEYWORD = 'pass'
 
 # Define a few command handlers. These usually take the two arguments update and
@@ -87,7 +88,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         CACHE = None
         QCACHE = None
         await update.message.reply_html(
-            rf"Hi {USER.mention_html()}!",  # type: ignore
+            rf"Hi {USER.mention_html()}!, " +    # type: ignore
+            "press [/help] for details . . .",
             reply_markup=ForceReply(selective=True),
         )
         return
@@ -99,6 +101,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 async def encrypt(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """"Encrypt Method"""
     global CHOICE
     CHOICE = 1
     await update.message.reply_html(
@@ -108,6 +111,7 @@ async def encrypt(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def decrypt(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Decrypt Method"""
     global CHOICE
     CHOICE = 2
     await update.message.reply_html(
@@ -117,9 +121,10 @@ async def decrypt(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def keyword(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Set Keyword"""
     global CHOICE
-    global PREV_CHOICE
-    PREV_CHOICE = CHOICE
+    #    global PREV_CHOICE
+    #    PREV_CHOICE = CHOICE
     CHOICE = 3
     await update.message.reply_html(
         rf"Enter KEYWORD",  # type: ignore
@@ -127,12 +132,12 @@ async def keyword(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
-async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Send a message when the command /help is issued."""
     await update.message.reply_text(
         '[/reset] resets the conversation,' +
         '\n [/retry] retries the last output,' +
-        '\n [/keyword] sets keyword,' +
+        '\n [/trigger] initiates the fun,' +
         '\n [/encrypt] encrypts a plain text' +
         '\n [/decrypt] decrypts a cipher text'
     )
@@ -196,7 +201,18 @@ async def runn(update: Update, context: ContextTypes.DEFAULT_TYPE):
     compute.start()
 
 
+async def getChoice(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Get Current CHOICE"""
+    await update.message.reply_text("Current CHOICE = " + str(CHOICE))
+
+
+async def getKeyword(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Get Current KEYWORD"""
+    await update.message.reply_text("Current KEYWORD : " + str(KEYWORD))
+
+
 async def wait(update, new):
+    """Wait Method"""
     global USER
     global CHAT_LOG
     global CACHE
@@ -229,6 +245,7 @@ async def wait(update, new):
 
 
 def wait_call(update, new):
+    """Invoke Wait"""
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     loop.run_until_complete(wait(update, new))
@@ -240,6 +257,7 @@ def wait_call(update, new):
 
 
 def format_prompt(question, chat_log=None):
+    """Format Prompt"""
     if chat_log is None:
         chat_log = 'The following is a chat between two users:\n\n'
     now = datetime.now()
@@ -249,13 +267,15 @@ def format_prompt(question, chat_log=None):
 
 
 def append_answer_to_chat_log(question, answer, chat_log=None):
+    """Append to Chat Log"""
     prompt = format_prompt(question, chat_log)
     return f'{prompt} {answer}\n'
 
 
 def ask(question):
+    """Get Answer"""
     global KEYWORD
-    global CHOICE
+    #    global CHOICE
     cipher = emojicrypt.EmojiCrypt(KEYWORD)
     if CHOICE == 1:
         answer = cipher.encrypt(question)
@@ -263,8 +283,8 @@ def ask(question):
         answer = cipher.decrypt(question)
     elif CHOICE == 3:
         KEYWORD = question
-        CHOICE = PREV_CHOICE
-        answer = "KEYWORD set to:=> " + KEYWORD
+        #        CHOICE = PREV_CHOICE
+        answer = "KEYWORD set to :=> " + KEYWORD
     else:
         answer = 'No Response . . .'
     return answer
@@ -272,6 +292,7 @@ def ask(question):
 
 
 async def interact(update, new):
+    """Interact with User"""
     global CHAT_LOG
     global CACHE
     global QCACHE
@@ -294,7 +315,7 @@ async def interact(update, new):
     try:
         answer = ask(question)
         if DEBUG is True:
-            print("Input :\n" + question)  # type: ignore
+            print("Input :\"" + question)  # type: ignore
             print("\nOutput :\n" + answer)  # type: ignore
             print("\n====================\n")
         await update.message.reply_text(answer)
@@ -305,6 +326,11 @@ async def interact(update, new):
             print('-----PRINTING CHAT LOG-----\n')
             print(CHAT_LOG)
             print('-----END CHAT LOG-----\n')
+        if CHOICE == 3:
+            await update.message.reply_html(
+                rf"Choose [/encrypt] or, [/decrypt]",  # type: ignore
+                reply_markup=ForceReply(selective=True),
+            )
     except Exception as e:
         errstr = str(e)
         print('\nException ::\n' + errstr)
@@ -312,6 +338,7 @@ async def interact(update, new):
 
 
 def interact_call(update, new):
+    """Invole Interact"""
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     loop.run_until_complete(interact(update, new))
@@ -329,12 +356,14 @@ def main() -> None:
 
     # on different commands - answer in Telegram
     application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("keyword", keyword))
+    application.add_handler(CommandHandler("trigger", keyword))
     application.add_handler(CommandHandler("encrypt", encrypt))
     application.add_handler(CommandHandler("decrypt", decrypt))
     application.add_handler(CommandHandler("help", help_command))
     application.add_handler(CommandHandler("reset", reset))
     application.add_handler(CommandHandler("retry", retry))
+    application.add_handler(CommandHandler("getChoice", getChoice))
+    application.add_handler(CommandHandler("getKeyword", getKeyword))
 
     # on non command i.e message - echo the message on Telegram
     application.add_handler(MessageHandler(
